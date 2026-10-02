@@ -1,0 +1,18 @@
+{
+  "name": "basira-provisions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HNG 15 Stage 2: a small shop with Google sign-in, Supabase-backed orders and Mailgun confirmation emails, on Cloudflare Pages.",
+  "scripts": {
+    "dev": "wrangler pages dev public --port 8788",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler pages deploy public --project-name basira-provisions --commit-dirty=true"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0",
+    "wrangler": "^4.0.0"
+  }
+}

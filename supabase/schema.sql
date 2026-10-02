@@ -54,15 +54,15 @@ create policy "own items insert" on public.order_items for insert
   with check (exists (select 1 from public.orders o where o.id = order_id and o.user_id = auth.uid()));
 
 insert into public.products (id, name, description, price, emoji, category, sort) values
-  ('rice-5kg', 'Rice, 5kg bag', 'Long-grain parboiled rice. Clean, no stones.', 950000, '🍚', 'Staples', 1),
-  ('oil-3l', 'Vegetable oil, 3L', 'Light frying and cooking oil.', 780000, '🫙', 'Staples', 2),
-  ('indomie-carton', 'Indomie carton (40)', 'Chicken flavour, full carton of 40 packs.', 1150000, '🍜', 'Staples', 3),
-  ('spaghetti-pack', 'Spaghetti, 500g', 'Golden Penny spaghetti pack.', 95000, '🍝', 'Staples', 4),
-  ('milo-500', 'Milo, 500g tin', 'Chocolate malt drink.', 420000, '☕', 'Breakfast', 5),
-  ('peak-milk', 'Peak milk, 400g tin', 'Full cream evaporated milk.', 55000, '🥛', 'Breakfast', 6),
-  ('eggs-crate', 'Eggs, crate of 30', 'Fresh from the farm this week.', 480000, '🥚', 'Breakfast', 7),
-  ('tomato-paste', 'Tomato paste, 6 sachets', 'Gino tomato paste, 70g each.', 180000, '🍅', 'Cooking', 8),
-  ('detergent-1kg', 'Detergent, 1kg', 'Ariel washing powder.', 320000, '🧼', 'Household', 9),
-  ('toilet-roll-12', 'Toilet roll, 12 pack', 'Soft 2-ply rolls.', 390000, '🧻', 'Household', 10)
+  ('rice-5kg', 'Mama Gold Rice 5kg', 'Parboiled long-grain rice, stone-free.', 950000, '🍚', 'Staples', 1),
+  ('oil-3l', 'Kings Groundnut Oil 3L', 'Pure vegetable oil for frying and stews.', 780000, '🫙', 'Staples', 2),
+  ('indomie-carton', 'Indomie Chicken (carton of 40)', 'The classic. Ready in three minutes.', 1150000, '🍜', 'Staples', 3),
+  ('spaghetti-pack', 'Golden Penny Spaghetti 500g', 'Pack of 500g. Buy five, get a smile.', 95000, '🍝', 'Staples', 4),
+  ('milo-500', 'Milo 500g Tin', 'Chocolate malt drink for the morning.', 420000, '☕', 'Breakfast', 5),
+  ('peak-milk', 'Peak Evaporated Milk (tin)', 'Full cream, perfect for tea and pap.', 55000, '🥛', 'Breakfast', 6),
+  ('eggs-crate', 'Crate of Eggs (30)', 'Fresh from the farm every Tuesday and Friday.', 480000, '🥚', 'Fresh', 7),
+  ('tomato-paste', 'Gino Tomato Paste (sachet pack of 10)', 'For the stew that makes the house smell right.', 180000, '🍅', 'Fresh', 8),
+  ('detergent-1kg', 'Ariel Detergent 1kg', 'Machine and hand wash.', 320000, '🧼', 'Household', 9),
+  ('toilet-roll-12', 'Toilet Roll (pack of 12)', 'Soft, two-ply, no arguments.', 390000, '🧻', 'Household', 10)
 on conflict (id) do update set name = excluded.name, description = excluded.description, price = excluded.price,
   emoji = excluded.emoji, category = excluded.category, sort = excluded.sort;

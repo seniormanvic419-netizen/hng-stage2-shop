@@ -134,3 +134,6 @@ img { display: block; max-width: 100%; }
 .foot__row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; }
 .foot p { margin: 0; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+.btn--google { white-space: nowrap; }
+@media (max-width: 40rem) { .btn__long { display: none; } }

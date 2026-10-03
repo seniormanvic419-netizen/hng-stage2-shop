@@ -49,8 +49,8 @@ img { display: block; max-width: 100%; }
 .hero h1, .page-head h1, .thanks h1 { margin: 0; font-size: clamp(1.9rem, 1.3rem + 2.6vw, 3.1rem); line-height: 1.08; letter-spacing: -.02em; }
 .lede { margin: 1rem 0 0; color: var(--text-2); font-size: 1.05rem; max-width: 52ch; }
 .hero__actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.5rem; }
-.hero__card { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; padding: .75rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
-.hero__card img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-sm); background: var(--surface-2); }
+.hero__card { display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem; padding: .6rem; max-width: 24rem; justify-self: end; width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.hero__card img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-sm); background: var(--surface-2); }
 
 /* catalog */
 .catalog-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1.5rem; }

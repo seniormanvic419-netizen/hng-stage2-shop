@@ -140,6 +140,10 @@
       var node = tpl.content.firstElementChild.cloneNode(true);
       node.dataset.id = p.id;
       $('.card__emoji', node).textContent = p.emoji || '🛍️';
+      var img = $('.card__img', node); var media = $('.card__media', node);
+      img.alt = p.name;
+      img.addEventListener('error', function () { img.classList.add('is-missing'); media.classList.add('no-img'); });
+      img.src = p.image || ('img/' + p.id + '.jpg');
       $('.card__cat', node).textContent = p.category || '';
       $('.card__name', node).textContent = p.name;
       $('.card__desc', node).textContent = p.description || '';

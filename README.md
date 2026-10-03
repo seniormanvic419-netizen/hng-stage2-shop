@@ -54,7 +54,7 @@ npm run typecheck
 | `MAILGUN_FROM` | secret | Optional sender, defaults to `postmaster@<domain>` |
 | `MAILGUN_REGION` | secret | `eu` for EU accounts, otherwise unset |
 
-Mailgun sandbox domains only deliver to **authorized recipients** (max 5). The function
+Mailgun sandbox domains only deliver to **authorized recipients** (max 5), and Gmail files mail from a sandbox sender under **Spam** (its reply is `250 OK DMARC:Quarantine`). Check Spam when testing. The function
 surfaces that case as `reason: "recipient_not_authorized"` and the UI explains it; the order
 itself is always saved.
 

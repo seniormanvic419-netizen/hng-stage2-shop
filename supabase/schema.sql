@@ -66,3 +66,28 @@ insert into public.products (id, name, description, price, emoji, category, sort
   ('toilet-roll-12', 'Toilet Roll (pack of 12)', 'Soft, two-ply, no arguments.', 390000, '🧻', 'Household', 10)
 on conflict (id) do update set name = excluded.name, description = excluded.description, price = excluded.price,
   emoji = excluded.emoji, category = excluded.category, sort = excluded.sort;
+
+-- Task 3: server-side cart shared by web and mobile (one row per user+product).
+create table if not exists public.cart_items (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  product_id text not null references public.products(id) on delete cascade,
+  quantity integer not null check (quantity > 0),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, product_id)
+);
+alter table public.cart_items enable row level security;
+drop policy if exists "own cart select" on public.cart_items;
+create policy "own cart select" on public.cart_items for select using (auth.uid() = user_id);
+drop policy if exists "own cart insert" on public.cart_items;
+create policy "own cart insert" on public.cart_items for insert with check (auth.uid() = user_id);
+drop policy if exists "own cart update" on public.cart_items;
+create policy "own cart update" on public.cart_items for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "own cart delete" on public.cart_items;
+create policy "own cart delete" on public.cart_items for delete using (auth.uid() = user_id);
+-- Realtime: broadcast row changes so web and mobile update instantly.
+alter table public.cart_items replica identity full;
+do $$ begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'cart_items') then
+    alter publication supabase_realtime add table public.cart_items;
+  end if;
+end $$;

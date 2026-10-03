@@ -46,6 +46,60 @@
   function setQty(id, qty) {
     if (qty <= 0) delete state.cart[id]; else state.cart[id] = Math.min(99, qty);
     saveCart(); renderCart(); renderCheckoutSummary();
+    syncQty(id, state.cart[id] || 0);
+  }
+
+  /* ---------- cart (Supabase, shared with the mobile app) ----------
+   * Signed-out visitors keep a local cart. On sign-in the local cart is merged into
+   * cart_items, which then becomes the source of truth. A realtime subscription keeps
+   * every open client (web tab, phone app) in step within a second.
+   */
+  var cartChannel = null;
+  function syncQty(id, qty) {
+    if (!state.user) return;
+    var uid = state.user.id;
+    var q = qty > 0
+      ? sb.from('cart_items').upsert({ user_id: uid, product_id: id, quantity: qty, updated_at: new Date().toISOString() }, { onConflict: 'user_id,product_id' })
+      : sb.from('cart_items').delete().match({ user_id: uid, product_id: id });
+    q.then(function (res) { if (res.error) toast('Cart sync failed: ' + res.error.message, true); });
+  }
+  function loadServerCart() {
+    if (!state.user) return Promise.resolve();
+    return sb.from('cart_items').select('product_id, quantity').then(function (res) {
+      if (res.error) { toast('Could not load your cart: ' + res.error.message, true); return; }
+      var next = {};
+      (res.data || []).forEach(function (r) { next[r.product_id] = r.quantity; });
+      state.cart = next; saveCart(); renderCart(); renderCheckoutSummary();
+    });
+  }
+  function mergeLocalIntoServer() {
+    var local = state.cart; var ids = Object.keys(local);
+    if (!state.user || !ids.length) return Promise.resolve();
+    var uid = state.user.id;
+    return sb.from('cart_items').select('product_id, quantity').then(function (res) {
+      var server = {}; (res.data || []).forEach(function (r) { server[r.product_id] = r.quantity; });
+      var rows = ids.map(function (id) { return { user_id: uid, product_id: id, quantity: Math.min(99, (server[id] || 0) + local[id]), updated_at: new Date().toISOString() }; });
+      return sb.from('cart_items').upsert(rows, { onConflict: 'user_id,product_id' });
+    });
+  }
+  function subscribeCart() {
+    unsubscribeCart();
+    if (!state.user) return;
+    cartChannel = sb.channel('cart:' + state.user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cart_items', filter: 'user_id=eq.' + state.user.id }, function () { loadServerCart(); })
+      .subscribe();
+  }
+  function unsubscribeCart() { if (cartChannel) { sb.removeChannel(cartChannel); cartChannel = null; } }
+  function clearServerCart() {
+    if (!state.user) return Promise.resolve();
+    return sb.from('cart_items').delete().eq('user_id', state.user.id);
+  }
+  var cartUserId = null;
+  function onSessionReady(session) {
+    if (!session) { cartUserId = null; unsubscribeCart(); return; }
+    if (cartUserId === session.user.id) return;
+    cartUserId = session.user.id;
+    mergeLocalIntoServer().then(loadServerCart).then(subscribeCart);
   }
   function addToCart(id) {
     setQty(id, (state.cart[id] || 0) + 1);
@@ -100,18 +154,19 @@
       var av = $('#user-avatar');
       if (meta.avatar_url || meta.picture) { av.src = meta.avatar_url || meta.picture; av.hidden = false; } else { av.hidden = true; }
     }
-    $('#cart-hint').textContent = u ? '' : 'You will sign in with Google at checkout.';
+    $('#cart-hint').textContent = u ? 'Synced to your account. The same cart shows in the mobile app.' : 'You will sign in with Google at checkout.';
   }
 
   sb.auth.onAuthStateChange(function (event, session) {
     state.session = session;
     state.user = session ? session.user : null;
     renderAuth();
+    if (session) onSessionReady(session);
     if (event === 'SIGNED_IN') {
       var intent = takeIntent();
       if (intent) showView(intent);
     }
-    if (event === 'SIGNED_OUT') { state.orders = null; }
+    if (event === 'SIGNED_OUT') { state.orders = null; onSessionReady(null); state.cart = {}; saveCart(); renderCart(); }
   });
 
   /* ---------- products ---------- */
@@ -239,7 +294,7 @@
       });
     }).then(function (created) {
       state.lastOrder = created;
-      state.cart = {}; saveCart(); renderCart();
+      state.cart = {}; saveCart(); renderCart(); clearServerCart();
       state.orders = null;
       $('#thanks-text').textContent = 'Thanks, ' + (name.split(' ')[0] || 'friend') + '. Order ' + shortId(created.id) + ' for ' + naira(created.total) + ' is confirmed. We will deliver to the address you gave and collect payment at the door.';
       $('#thanks-email').textContent = 'Sending your confirmation email to ' + email + '…';
@@ -319,6 +374,7 @@
   loadProducts();
   sb.auth.getSession().then(function (r) {
     state.session = r.data.session; state.user = r.data.session ? r.data.session.user : null; renderAuth();
+    if (state.user) onSessionReady(r.data.session);
     if (location.hash === '#orders' && state.user) showView('orders');
   });
   if (location.search.indexOf('error=') > -1) {
